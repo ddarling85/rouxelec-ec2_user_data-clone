@@ -15,7 +15,7 @@ for item in response['Items']:
     ip=item.get('ec2_ip_address')
     vpc_name=item.get('id')
     if not ip is None:
-        out = subprocess.Popen(['ping', ip, '-n', '1', '-w', '1'], 
+        out = subprocess.Popen(['ping', ip, '-c', '1'], 
            stdout=subprocess.PIPE, 
            stderr=subprocess.STDOUT)
         stdout,stderr = out.communicate()
