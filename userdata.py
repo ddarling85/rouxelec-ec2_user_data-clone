@@ -10,25 +10,32 @@ dynamodb = boto3.resource('dynamodb', region_name='ca-central-1')
 cidr_range_table = dynamodb.Table('cidr_range_table')
 response = cidr_range_table.scan()
 ping_test="1 packets transmitted, 1 received, 0% packet loss"
+cmd_local_ip="curl http://169.254.169.254/latest/meta-data/local-ipv4"
+out = subprocess.Popen([cmd_local_ip], 
+           stdout=subprocess.PIPE, 
+           stderr=subprocess.STDOUT)
+        stdout,stderr = out.communicate()
+local_ip=str(stdout)    
 for item in response['Items']:
     print(item)
     ip=item.get('ec2_ip_address')
     vpc_name=item.get('id')
-    if not ip is None or not ip=="":
-        out = subprocess.Popen(['ping', ip, '-c', '1'], 
-           stdout=subprocess.PIPE, 
-           stderr=subprocess.STDOUT)
-        stdout,stderr = out.communicate()
-        result_ping="PING NOT OK"
-        if ping_test in str(stdout):
-            result_ping="PING OK"
-        response = cidr_range_table.update_item(
-            Key={
-                'id': vpc_name
-            },
-            UpdateExpression="SET ping_from_"+str(ip.replace('.',"_"))+" = :r",            
-            ExpressionAttributeValues={
-                ':r':  result_ping,
-            },
-            ReturnValues="UPDATED_NEW"
-        )
+    if not ip is None:
+        if not ip:
+            out = subprocess.Popen(['ping', ip, '-c', '1'], 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.STDOUT)
+            stdout,stderr = out.communicate()
+            result_ping="PING NOT OK"
+            if ping_test in str(stdout):
+                result_ping="PING OK"
+            response = cidr_range_table.update_item(
+                Key={
+                    'id': vpc_name
+                },
+                UpdateExpression="SET ping_from_"+str(local_ip.replace('.',"_"))+" = :r",            
+                ExpressionAttributeValues={
+                    ':r':  result_ping,
+                },
+                ReturnValues="UPDATED_NEW"
+            )
