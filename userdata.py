@@ -14,18 +14,17 @@ for item in response['Items']:
     ip=item.get('ec2_ip_address')
     vpc_name=item.get('id')
     if not ip is None:
-        #out = subprocess.Popen(['ping', ip, '-n', '1', '-w', '1'], 
-        #   stdout=subprocess.PIPE, 
-        #   stderr=subprocess.STDOUT)
-        #stdout,stderr = out.communicate()
+        out = subprocess.Popen(['ping', ip, '-n', '1', '-w', '1'], 
+           stdout=subprocess.PIPE, 
+           stderr=subprocess.STDOUT)
+        stdout,stderr = out.communicate()
         response = cidr_range_table.update_item(
             Key={
-                'id': "the_defaut"
+                'id': vpc_name
             },
-            #UpdateExpression="SET ping_from_"+str(ip.replace('.',"_"))+" = :r",
-            UpdateExpression="SET ping_from"+" = :r",
+            UpdateExpression="SET ping_from_"+str(ip.replace('.',"_"))+" = :r",            
             ExpressionAttributeValues={
-                ':r':  "on essaie",
+                ':r':  stdout,
             },
             ReturnValues="UPDATED_NEW"
         )
